@@ -9,6 +9,7 @@ class YandexMapControllerr extends ChangeNotifier {
   YandexMapControllerr() {
     joylashuvniAniqlash();
     myHome;
+    addInitMapObject();
   }
 
   //! maskur joylashuvni yuklab olishimiz uchun yaratdik
@@ -61,8 +62,10 @@ class YandexMapControllerr extends ChangeNotifier {
 
   void meniTop() async {
     BoundingBox boundingBox = BoundingBox(
-      northEast: Point(latitude: myPosition.latitude, longitude: myPosition.longitude),
-      southWest: Point(latitude: myPosition.latitude, longitude: myPosition.longitude),
+      northEast:
+          Point(latitude: myPosition.latitude, longitude: myPosition.longitude),
+      southWest:
+          Point(latitude: myPosition.latitude, longitude: myPosition.longitude),
     );
     yandexMapController.moveCamera(
       CameraUpdate.newTiltAzimuthGeometry(
@@ -99,8 +102,11 @@ class YandexMapControllerr extends ChangeNotifier {
       CameraUpdate.tiltTo(20),
       animation: const MapAnimation(type: MapAnimationType.smooth, duration: 4),
     );
-    PlacemarkMapObject pdp = addMapOb(latitude: myPosition.latitude, longitude: myPosition.longitude, objectname: 'pdp');
-   // mapObjects.add(pdp);
+    PlacemarkMapObject pdp = addMapOb(
+        latitude: myPosition.latitude,
+        longitude: myPosition.longitude,
+        objectname: 'pdp');
+    mapObjects.add(pdp);
     myHome(controller);
     notifyListeners();
   }
@@ -127,9 +133,18 @@ class YandexMapControllerr extends ChangeNotifier {
       animation: const MapAnimation(type: MapAnimationType.smooth, duration: 4),
     );
     notifyListeners();
-    PlacemarkMapObject home = addMapOb(latitude: latitude, longitude: longitude, objectname: 'home');
+    PlacemarkMapObject home =
+        addMapOb(latitude: latitude, longitude: longitude, objectname: 'home');
 
-    //mapObjects.add(home);
+    mapObjects.add(home);
+    notifyListeners();
+  }
+
+  void addInitMapObject() {
+    mapObjects.addAll([
+      addMapObjectMetro(
+          latitude: 41.303308, longitude: 69.235699, objectname: 'M'),
+    ]);
     notifyListeners();
   }
 
@@ -143,7 +158,26 @@ class YandexMapControllerr extends ChangeNotifier {
       point: Point(latitude: latitude, longitude: longitude),
       opacity: 1,
       icon: PlacemarkIcon.single(
-        PlacemarkIconStyle(image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'), scale: 0.2),
+        PlacemarkIconStyle(
+            image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
+            scale: 0.2),
+      ),
+    );
+  }
+
+  PlacemarkMapObject addMapObjectMetro({
+    required double latitude,
+    required double longitude,
+    required String objectname,
+  }) {
+    return PlacemarkMapObject(
+      mapId: MapObjectId(objectname),
+      point: Point(latitude: latitude, longitude: longitude),
+      opacity: 1,
+      icon: PlacemarkIcon.single(
+        PlacemarkIconStyle(
+            image: BitmapDescriptor.fromAssetImage('assets/icons/metro.png'),
+            scale: 0.2),
       ),
     );
   }
@@ -169,10 +203,12 @@ class YandexMapControllerr extends ChangeNotifier {
       ),
       point: point,
       icon: PlacemarkIcon.single(
-        PlacemarkIconStyle(image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'), scale: 0.2),
+        PlacemarkIconStyle(
+            image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
+            scale: 0.2),
       ),
     );
-   // mapObjects.add(addObject);
+    // mapObjects.add(addObject);
     mapObjects.removeRange(2, mapObjects.length - 1);
     notifyListeners();
   }
@@ -182,54 +218,108 @@ class YandexMapControllerr extends ChangeNotifier {
       mapId: const MapObjectId('myLocationId'),
       point: Point(latitude: position.latitude, longitude: position.longitude),
       icon: PlacemarkIcon.single(
-        PlacemarkIconStyle(image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'), scale: 0.2),
+        PlacemarkIconStyle(
+            image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
+            scale: 0.2),
       ),
     );
     mapObjects.add(placemarkMapObject);
-   // mapObjects.removeRange(3, mapObjects.length - 1);
+    // mapObjects.removeRange(3, mapObjects.length - 1);
     notifyListeners();
   }
 
   Future<void> goLiveListen() async {
-    Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.best, distanceFilter: 0)).listen((live) {
+    Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.best, distanceFilter: 0))
+        .listen((live) {
       putLabel(live);
       log('${live.speed}');
       BoundingBox boundingBox = BoundingBox(
         northEast: Point(latitude: live.latitude, longitude: live.longitude),
         southWest: Point(latitude: live.latitude, longitude: live.longitude),
       );
-      yandexMapController.moveCamera(CameraUpdate.newTiltAzimuthGeometry(Geometry.fromBoundingBox(boundingBox)));
-      yandexMapController.moveCamera(CameraUpdate.zoomTo(18));
+      // yandexMapController.moveCamera(CameraUpdate.newTiltAzimuthGeometry(Geometry.fromBoundingBox(boundingBox)));
+      // yandexMapController.moveCamera(CameraUpdate.zoomTo(18));
     });
     notifyListeners();
   }
 
-  void makeRoute({ required Point end}) {
-    final drive = YandexDriving.requestRoutes(
+  // void makeRoute({ required Point end}) {
+  //   final drive = YandexDriving.requestRoutes(
+  //     points: [
+  //       RequestPoint(point: Point(latitude: position2.latitude, longitude: myPosition.latitude), requestPointType: RequestPointType.wayPoint),
+  //       RequestPoint(point: end, requestPointType: RequestPointType.wayPoint),
+  //     ],
+  //     drivingOptions: const DrivingOptions(
+  //       routesCount: 1,
+  //       avoidTolls: true,
+  //       avoidPoorConditions: true,
+  //     ),
+  //   );
+  //   drive.result.then((value) {
+  //     if (value.routes != null) {
+  //       value.routes?.asMap().forEach((key, value) {
+  //         mapObjects.add(
+  //           PolylineMapObject(
+  //             mapId: MapObjectId('routes$key'),
+  //             strokeColor: Colors.indigo,
+  //             outlineColor: Colors.green,
+  //             polyline: Polyline(points: value.geometry),
+  //           ),
+  //         );
+  //         notifyListeners();
+  //       });
+  //     }
+  //   });
+  // }
+  Future<void> makeRoad(Position startPoint, Point endPoint) async {
+    var resultSession = YandexDriving.requestRoutes(
       points: [
-        RequestPoint(point: Point(latitude: position2.latitude, longitude: myPosition.latitude), requestPointType: RequestPointType.wayPoint),
-        RequestPoint(point: end, requestPointType: RequestPointType.wayPoint),
+        RequestPoint(
+            point: Point(
+              latitude: startPoint.latitude,
+              longitude: startPoint.longitude,
+            ),
+            requestPointType: RequestPointType.wayPoint),
+        RequestPoint(
+            point: endPoint, requestPointType: RequestPointType.wayPoint),
       ],
       drivingOptions: const DrivingOptions(
         routesCount: 1,
-        avoidTolls: true,
-        avoidPoorConditions: true,
+        avoidTolls: false,
+        avoidPoorConditions: false,
       ),
     );
-    drive.result.then((value) {
-      if (value.routes != null) {
-        value.routes?.asMap().forEach((key, value) {
-          mapObjects.add(
-            PolylineMapObject(
-              mapId: MapObjectId('routes$key'),
-              strokeColor: Colors.red,
-              outlineColor: Colors.green,
-              polyline: Polyline(points: value.geometry),
-            ),
-          );
-          notifyListeners();
-        });
-      }
+
+    var result = await resultSession.result;
+
+    // Add a Placemark for the end point
+    mapObjects.add(
+      PlacemarkMapObject(
+        mapId: const MapObjectId('endPoint'),
+        point: endPoint,
+        icon: PlacemarkIcon.single(
+          PlacemarkIconStyle(
+            image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
+            scale: 0.2,
+          ),
+        ),
+      ),
+    );
+
+    // Add route as a PolylineMapObject
+    result.routes?.asMap().forEach((key, value) {
+      mapObjects.add(
+        PolylineMapObject(
+          mapId: MapObjectId("route_$key"),
+          polyline: Polyline(points: value.geometry),
+          strokeColor: Colors.red,
+          strokeWidth: 3,
+        ),
+      );
     });
+
+    notifyListeners();
   }
 }

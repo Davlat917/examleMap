@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yandex_and_flutter_map/controller/yandex_map_controller.dart';
-import 'package:yandex_and_flutter_map/pages/flutter_map_page.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 class YandexMapPage extends StatelessWidget {
@@ -9,32 +8,46 @@ class YandexMapPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    YandexMapControllerr yandexControllerr = Provider.of<YandexMapControllerr>(context);
-    // ignore: prefer_const_constructors
+    YandexMapControllerr yandexControllerr =
+        Provider.of<YandexMapControllerr>(context);
+
     return Scaffold(
       body: yandexControllerr.isLoading
-          ? Expanded(
-              child: YandexMap(
-                onMapTap: (Point point) {
-                  yandexControllerr.onLabelTap(point);
-                  yandexControllerr.makeRoute( end: point);
-                },
-                mapObjects: yandexControllerr.mapObjects,
-                onMapCreated: yandexControllerr.onMapCreated,
-                onObjectTap: (geoObject) {
-                  yandexControllerr.myHome;
-                },
-              ),
+          ? YandexMap(
+              onMapTap: (Point point) {
+                yandexControllerr.makeRoad(
+                    yandexControllerr.myPosition,
+                    Point(
+                        latitude: point.latitude, longitude: point.longitude));
+              },
+              mapObjects: yandexControllerr.mapObjects,
+              onMapCreated: yandexControllerr.onMapCreated,
+              onObjectTap: (geoObject) {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('Obyekt Tafsiloti'),
+                      content: Text(
+                          'Siz ${geoObject.name ?? "nomi yo'q obyekt"} ni bosdingiz!'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Yopish'),
+                        )
+                      ],
+                    );
+                  },
+                );
+              },
             )
           : const Center(
               child: CircularProgressIndicator(),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Column(
-        // mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           const Spacer(),
-          //? Home
           FloatingActionButton(
             onPressed: () {
               yandexControllerr.myHome;
@@ -42,46 +55,27 @@ class YandexMapPage extends StatelessWidget {
             backgroundColor: Colors.black12,
             child: const Icon(Icons.home),
           ),
-          const Spacer(
-            flex: 4,
-          ),
+          const Spacer(flex: 4),
           FloatingActionButton(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            onPressed: () {
-              yandexControllerr.mapZoomIn();
-            },
+            onPressed: yandexControllerr.mapZoomIn,
             backgroundColor: Colors.redAccent.withOpacity(0.6),
             child: const Icon(Icons.add),
           ),
-          const SizedBox(
-            height: 10,
-          ),
-           FloatingActionButton(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            onPressed: () {
-              yandexControllerr.goLiveListen();
-            },
-            backgroundColor: Colors.redAccent.withOpacity(0.6),
-            child: const Icon(Icons.location_searching_rounded),
-          ),
-           const SizedBox(
-            height: 10,
-          ),
+          const SizedBox(height: 10),
+          // FloatingActionButton(
+          //   onPressed: yandexControllerr.goLiveListen,
+          //   backgroundColor: Colors.redAccent.withOpacity(0.6),
+          //   child: const Icon(Icons.live_tv_sharp),
+          // ),
+          const SizedBox(height: 10),
           FloatingActionButton(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            onPressed: () {
-              yandexControllerr.mapZoomOut();
-            },
+            onPressed: yandexControllerr.mapZoomOut,
             backgroundColor: Colors.redAccent.withOpacity(0.6),
             child: const Icon(Icons.remove),
           ),
-          const Spacer(
-            flex: 2,
-          ),
+          const Spacer(flex: 2),
           FloatingActionButton(
-            onPressed: () {
-              yandexControllerr.meniTop();
-            },
+            onPressed: yandexControllerr.meniTop,
             backgroundColor: Colors.indigo.shade100,
             child: const Icon(
               Icons.navigation_rounded,
@@ -89,24 +83,6 @@ class YandexMapPage extends StatelessWidget {
               size: 30,
             ),
           ),
-          const SizedBox(
-            height: 10,
-          ),
-          FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const FlutterMapPage(),
-                ),
-              );
-            },
-            backgroundColor: Colors.indigo.shade300,
-            child: const FlutterLogo(),
-          ),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.05,
-          )
         ],
       ),
     );
