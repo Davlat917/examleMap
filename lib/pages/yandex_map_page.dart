@@ -13,34 +13,59 @@ class YandexMapPage extends StatelessWidget {
 
     return Scaffold(
       body: yandexControllerr.isLoading
-          ? YandexMap(
-              onMapTap: (Point point) {
-                yandexControllerr.makeRoad(
-                    yandexControllerr.myPosition,
-                    Point(
-                        latitude: point.latitude, longitude: point.longitude));
-              },
-              mapObjects: yandexControllerr.mapObjects,
-              onMapCreated: yandexControllerr.onMapCreated,
-              onObjectTap: (geoObject) {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text('Obyekt Tafsiloti'),
-                      content: Text(
-                          'Siz ${geoObject.name ?? "nomi yo'q obyekt"} ni bosdingiz!'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Yopish'),
-                        )
-                      ],
-                    );
-                  },
-                );
-              },
-            )
+          ?YandexMap(
+  mapObjects: yandexControllerr.mapObjects,
+  onMapCreated: yandexControllerr.onMapCreated,
+onObjectTap: (geoObject) {
+  try {
+    // geoObject.id orqali bosilgan obyektni aniqlaymiz
+    final tappedObject = yandexControllerr.mapObjects.firstWhere(
+      (object) => object.mapId.value == geoObject.name,
+    );
+
+    // Agar obyekt topilsa, dialogni ko'rsatamiz
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Obyekt haqida maʼlumot'),
+          content: Text(
+            'Siz obyektni bosdingiz: \n'
+            'Nomi: ${geoObject.name ?? "Nomaʼlum"}\n'
+            'Koordinatalar: Latitude: ${geoObject.geometry.first.point!.latitude}, '
+            'Longitude: ${geoObject.geometry.first.point!.longitude}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Yopish'),
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    // Agar obyekt topilmasa yoki xato yuz bersa
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Xato'),
+          content: const Text('Bosilgan obyekt haqida maʼlumot topilmadi.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Yopish'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+)
+
           : const Center(
               child: CircularProgressIndicator(),
             ),
@@ -48,13 +73,6 @@ class YandexMapPage extends StatelessWidget {
       floatingActionButton: Column(
         children: [
           const Spacer(),
-          FloatingActionButton(
-            onPressed: () {
-              yandexControllerr.myHome;
-            },
-            backgroundColor: Colors.black12,
-            child: const Icon(Icons.home),
-          ),
           const Spacer(flex: 4),
           FloatingActionButton(
             onPressed: yandexControllerr.mapZoomIn,
@@ -62,11 +80,6 @@ class YandexMapPage extends StatelessWidget {
             child: const Icon(Icons.add),
           ),
           const SizedBox(height: 10),
-          // FloatingActionButton(
-          //   onPressed: yandexControllerr.goLiveListen,
-          //   backgroundColor: Colors.redAccent.withOpacity(0.6),
-          //   child: const Icon(Icons.live_tv_sharp),
-          // ),
           const SizedBox(height: 10),
           FloatingActionButton(
             onPressed: yandexControllerr.mapZoomOut,

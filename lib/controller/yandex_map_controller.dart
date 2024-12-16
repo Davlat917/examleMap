@@ -8,22 +8,18 @@ late Position position2;
 class YandexMapControllerr extends ChangeNotifier {
   YandexMapControllerr() {
     joylashuvniAniqlash();
-    myHome;
     addInitMapObject();
   }
-
+  //! camera zoom variable
+  double cameraZoom = 0;
   //! maskur joylashuvni yuklab olishimiz uchun yaratdik
   late Position myPosition;
-
   //! joylashuni aniqlab olguncha
   bool isLoading = false;
-
   //! yandex map Controller
   late YandexMapController yandexMapController;
-
   //! Xaritadagi joylashuvlar
   List<MapObject> mapObjects = [];
-
   Future<Position> joylashuvniAniqlash() async {
     isLoading = false;
     bool joylashuv;
@@ -57,9 +53,9 @@ class YandexMapControllerr extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     return myPosition;
-    // ignore: empty_catches
   }
 
+  //! joylashuvingizni olamiz
   void meniTop() async {
     BoundingBox boundingBox = BoundingBox(
       northEast:
@@ -75,9 +71,16 @@ class YandexMapControllerr extends ChangeNotifier {
     yandexMapController.moveCamera(
       CameraUpdate.zoomTo(20),
     );
+    putLabel(myPosition);
   }
 
-  //? hozirgi joylashuv
+//? Camera Zoom get
+  void cameraZoomGEt({required double zoom}) async {
+    cameraZoom = zoom;
+    notifyListeners();
+  }
+
+  //? hozirgi joylashuvingizni haritada zoom qilish
   void onMapCreated(YandexMapController controller) async {
     yandexMapController = controller;
     BoundingBox boundingBox = BoundingBox(
@@ -102,53 +105,27 @@ class YandexMapControllerr extends ChangeNotifier {
       CameraUpdate.tiltTo(20),
       animation: const MapAnimation(type: MapAnimationType.smooth, duration: 4),
     );
-    PlacemarkMapObject pdp = addMapOb(
-        latitude: myPosition.latitude,
-        longitude: myPosition.longitude,
-        objectname: 'pdp');
-    mapObjects.add(pdp);
-    myHome(controller);
+
     notifyListeners();
   }
 
-  void myHome(YandexMapController controller) async {
-    double latitude = 39.399710;
-    double longitude = 67.342124;
-    yandexMapController = controller;
-
-    BoundingBox myHome = BoundingBox(
-      northEast: Point(latitude: latitude, longitude: longitude),
-      southWest: Point(latitude: latitude, longitude: longitude),
-    );
-    yandexMapController.moveCamera(
-      CameraUpdate.newTiltAzimuthGeometry(
-        Geometry.fromBoundingBox(myHome),
-      ),
-    );
-    yandexMapController.moveCamera(
-      CameraUpdate.zoomTo(12),
-    );
-    yandexMapController.moveCamera(
-      CameraUpdate.tiltTo(20),
-      animation: const MapAnimation(type: MapAnimationType.smooth, duration: 4),
-    );
-    notifyListeners();
-    PlacemarkMapObject home =
-        addMapOb(latitude: latitude, longitude: longitude, objectname: 'home');
-
-    mapObjects.add(home);
-    notifyListeners();
-  }
-
+//? Hariataga mavjud Obyektlarni joylovchi
   void addInitMapObject() {
     mapObjects.addAll([
       addMapObjectMetro(
-          latitude: 41.303308, longitude: 69.235699, objectname: 'M'),
+          latitude: 41.303308, longitude: 69.235699, objectname: 'Milliy bog`'),
+      addMapObjectMetro(
+          latitude: 41.318843,
+          longitude: 69.254252,
+          objectname: 'Alisher Navoiy'),
+      addMapObjectMetro(
+          latitude: 41.332425, longitude: 69.219033, objectname: 'Tinchlik'),
     ]);
     notifyListeners();
   }
 
-  PlacemarkMapObject addMapOb({
+//? haritada home iconi qo'yaman
+  PlacemarkMapObject addMapObjectIconHome({
     required double latitude,
     required double longitude,
     required String objectname,
@@ -165,6 +142,7 @@ class YandexMapControllerr extends ChangeNotifier {
     );
   }
 
+//? haritada metro iconi qo'yaman
   PlacemarkMapObject addMapObjectMetro({
     required double latitude,
     required double longitude,
@@ -176,23 +154,24 @@ class YandexMapControllerr extends ChangeNotifier {
       opacity: 1,
       icon: PlacemarkIcon.single(
         PlacemarkIconStyle(
-            image: BitmapDescriptor.fromAssetImage('assets/icons/metro.png'),
-            scale: 0.2),
+          scale: 0.2,
+          image: BitmapDescriptor.fromAssetImage('assets/icons/metro.png'),
+        ),
       ),
     );
   }
 
+//? zoom in
   void mapZoomIn() {
     yandexMapController.moveCamera(
       CameraUpdate.zoomIn(),
-      animation: const MapAnimation(),
     );
   }
 
+//? zoom out
   void mapZoomOut() {
     yandexMapController.moveCamera(
       CameraUpdate.zoomOut(),
-      animation: const MapAnimation(),
     );
   }
 
@@ -204,31 +183,36 @@ class YandexMapControllerr extends ChangeNotifier {
       point: point,
       icon: PlacemarkIcon.single(
         PlacemarkIconStyle(
-            image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
+            image: BitmapDescriptor.fromAssetImage('assets/icons/flag.png'),
             scale: 0.2),
       ),
     );
-    // mapObjects.add(addObject);
+    mapObjects.add(addObject);
     mapObjects.removeRange(2, mapObjects.length - 1);
     notifyListeners();
   }
 
+  //? Seni kuzatuvchi(Icon)
   void putLabel(Position position) {
     PlacemarkMapObject placemarkMapObject = PlacemarkMapObject(
       mapId: const MapObjectId('myLocationId'),
       point: Point(latitude: position.latitude, longitude: position.longitude),
       icon: PlacemarkIcon.single(
         PlacemarkIconStyle(
-            image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
-            scale: 0.2),
+            image:
+                BitmapDescriptor.fromAssetImage('assets/icons/navigator.png'),
+            scale: 0.25),
       ),
     );
     mapObjects.add(placemarkMapObject);
     // mapObjects.removeRange(3, mapObjects.length - 1);
     notifyListeners();
+    goLiveListen();
   }
 
+  //? Seni Kuzatish
   Future<void> goLiveListen() async {
+    //? kuzatayapti
     Geolocator.getPositionStream(
             locationSettings: const LocationSettings(
                 accuracy: LocationAccuracy.best, distanceFilter: 0))
@@ -239,40 +223,19 @@ class YandexMapControllerr extends ChangeNotifier {
         northEast: Point(latitude: live.latitude, longitude: live.longitude),
         southWest: Point(latitude: live.latitude, longitude: live.longitude),
       );
-      // yandexMapController.moveCamera(CameraUpdate.newTiltAzimuthGeometry(Geometry.fromBoundingBox(boundingBox)));
-      // yandexMapController.moveCamera(CameraUpdate.zoomTo(18));
+      // yandexMapController.moveCamera(
+      //   CameraUpdate.newTiltAzimuthGeometry(
+      //     Geometry.fromBoundingBox(boundingBox),
+      //   ),
+      // );
+      // yandexMapController.moveCamera(
+      //   CameraUpdate.zoomTo(18),
+      // );
     });
     notifyListeners();
   }
 
-  // void makeRoute({ required Point end}) {
-  //   final drive = YandexDriving.requestRoutes(
-  //     points: [
-  //       RequestPoint(point: Point(latitude: position2.latitude, longitude: myPosition.latitude), requestPointType: RequestPointType.wayPoint),
-  //       RequestPoint(point: end, requestPointType: RequestPointType.wayPoint),
-  //     ],
-  //     drivingOptions: const DrivingOptions(
-  //       routesCount: 1,
-  //       avoidTolls: true,
-  //       avoidPoorConditions: true,
-  //     ),
-  //   );
-  //   drive.result.then((value) {
-  //     if (value.routes != null) {
-  //       value.routes?.asMap().forEach((key, value) {
-  //         mapObjects.add(
-  //           PolylineMapObject(
-  //             mapId: MapObjectId('routes$key'),
-  //             strokeColor: Colors.indigo,
-  //             outlineColor: Colors.green,
-  //             polyline: Polyline(points: value.geometry),
-  //           ),
-  //         );
-  //         notifyListeners();
-  //       });
-  //     }
-  //   });
-  // }
+  //? Haritadan point Tanlanganda
   Future<void> makeRoad(Position startPoint, Point endPoint) async {
     var resultSession = YandexDriving.requestRoutes(
       points: [
@@ -287,8 +250,8 @@ class YandexMapControllerr extends ChangeNotifier {
       ],
       drivingOptions: const DrivingOptions(
         routesCount: 1,
-        avoidTolls: false,
-        avoidPoorConditions: false,
+        avoidTolls: true,
+        avoidPoorConditions: true,
       ),
     );
 
@@ -302,13 +265,13 @@ class YandexMapControllerr extends ChangeNotifier {
         icon: PlacemarkIcon.single(
           PlacemarkIconStyle(
             image: BitmapDescriptor.fromAssetImage('assets/icons/home.jpg'),
-            scale: 0.2,
+            scale: 0.3,
           ),
         ),
       ),
     );
 
-    // Add route as a PolylineMapObject
+    //! Harakat yo'l ko'rinishi
     result.routes?.asMap().forEach((key, value) {
       mapObjects.add(
         PolylineMapObject(
